@@ -20,6 +20,7 @@ end
 
 
 @agents = {
+	'staging3' => Agent.new('~/dragent_files/nb.dragent.as3.yaml'),
 	'staging' => Agent.new('~/dragent_files/nb.dragent.as2.yaml'), 
 	'default' => Agent.new()
 }
