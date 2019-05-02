@@ -4,7 +4,7 @@ require 'socket'
 require 'getoptlong'
 
 def usage
-  puts "Usage: send_udp <host> <port> <message>"
+  puts "Usage: send_udp [-a <host addr>] [-p <host port>] [-i <input file>]"
 end
 
 opts = GetoptLong.new(
