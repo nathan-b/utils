@@ -6,6 +6,33 @@
 
 require 'fileutils'
 
+def try_untar(f)
+  res = `tar tf #{f} 2>&1`.split("\n")
+  if !$?.success?
+    # OK, guess it's not a tar archive
+    return false
+  end
+
+  # For now just untar into current directory
+  `tar xf #{f}`
+  return $?.success?
+end
+
+def try_unzip(f)
+  res = `file -b #{f}`.split(' ')
+  case res[0]
+  when 'gzip'
+    `gunzip #{f}`
+  when 'bzip2'
+    `bunzip2 #{f}`
+  when 'Zip'
+    `unzip #{f}`
+  when '7-zip'
+    `7z e #{f}`
+  end
+  return $?.success?
+end
+
 bug = 'new'
 files = []
 
@@ -33,7 +60,16 @@ end
 bugdir = "/home/nathan/bugs/#{bug}"
 
 `mkdir -p #{bugdir}`
+
+# Copy files to the bug dir
 files.each { |f|
   FileUtils.mv("#{Dir.getwd}/#{f}", "#{bugdir}/#{f}")
+}
+
+# Post-process files
+Dir.chdir(bugdir)
+files.each { |f|
+  next if try_untar(f)
+  next if try_unzip(f)
 }
 
