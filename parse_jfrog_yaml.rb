@@ -17,6 +17,6 @@ end
 h = YAML.load_file(ARGV.shift)
 
 h[h.keys[0]].each { |rec|
-  puts "[#{rec['severity']}] #{get_package_name(rec['impact_path'][0])}: #{get_cves(rec['cves'])}"
+  puts "[#{rec['severity']}] #{get_package_name(rec['impact_path'][0])} : #{get_cves(rec['cves'])}"
 }
 
