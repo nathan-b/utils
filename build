@@ -6,7 +6,7 @@ else
 	variant="$@"
 fi
 
-cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=7 -v /draios:/draios:ro -v /opt/draios:/opt/draios -v /opt/draios/pkgs:/out -v /var/run/docker.sock:/var/run/docker.sock -v /draios/build/agent:/code/agent/build -v /draios/build/sysdig:/code/sysdig/build -v pipcache:/root/.cache agent-builder $variant"
+cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=7 -v /draios:/draios:ro -v /opt/draios:/opt/draios -v /opt/draios/pkgs:/out -v /var/run/docker.sock:/var/run/docker.sock -v /draios/build/agent:/code/agent/build -v /draios/build/sysdig:/code/sysdig/build -v pipcache:/root/.cache quay.io/sysdig/agent-builder $variant"
 echo $cmd
 $cmd
 
