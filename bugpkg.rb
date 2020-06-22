@@ -63,13 +63,14 @@ bugdir = "/home/nathan/bugs/#{bug}"
 
 # Copy files to the bug dir
 files.each { |f|
-  FileUtils.mv("#{Dir.getwd}/#{f}", "#{bugdir}/#{f}")
+  FileUtils.mv("#{File.absolute_path(f)}", "#{bugdir}/#{File.basename(f)}")
 }
 
 # Post-process files
 Dir.chdir(bugdir)
 files.each { |f|
-  next if try_untar(f)
-  next if try_unzip(f)
+  fn = File.basename(f)
+  next if try_untar(fn)
+  next if try_unzip(fn)
 }
 
