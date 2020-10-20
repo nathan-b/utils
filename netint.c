@@ -14,8 +14,11 @@ typedef struct
 typedef struct _node
 {
 	struct _node* next;
-	long val;
+	uint64_t val;
 } node_t;
+
+#define htonll(x) ((((uint64_t)htonl(x)) << 32) + htonl((x) >> 32))
+#define ntohll(x) ((((uint64_t)ntohl(x)) << 32) + ntohl((x) >> 32))
 
 void free_nodes(node_t*);
 
@@ -59,7 +62,7 @@ node_t* read_commandline(int argc, char** argv, flags_t* outflags)
 		{
 			node_t* n = (node_t*)malloc(sizeof(node_t));
 			n->next = NULL;
-			n->val = strtol(argv[i], NULL, 0);
+			n->val = strtoull(argv[i], NULL, 0);
 			if(curr == NULL)
 			{
 				ret = n;
@@ -95,7 +98,7 @@ int main(int argc, char** argv)
 
 	while (list != NULL)
 	{
-		long lav = htonl(list->val);
+		uint64_t lav = htonll(list->val);
 		if (flags.dec)
 		{
 			if (flags.quiet)
