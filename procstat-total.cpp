@@ -1,5 +1,4 @@
 #include <iostream>
-#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -8,8 +7,6 @@
 #include <chrono>
 
 #include <cstdint>
-#include <unistd.h>
-#include <time.h>
 
 using namespace std;
 
@@ -27,6 +24,8 @@ struct stat_vals
 		STEAL,
 		MAX
 	};
+
+
 
 	string label;
 	uint64_t vals[stat_label::MAX];
@@ -132,73 +131,17 @@ list<stat_vals> read_proc_stat()
 
 int main(int argc, char** argv)
 {
-	int nvals = 33;
-	int vals[512] = {};
 	auto statlist = read_proc_stat();
-	auto last_read_ts = std::chrono::steady_clock::now();
-	nvals = statlist.size();
-	auto last = statlist;
-	int totals[512] = {};
-	int samples = 0;
-
+	auto last = statlist.front();
 	while(true)
 	{
-		this_thread::sleep_for(chrono::seconds(1));
 		statlist = read_proc_stat();
-		auto new_last_read_ts = std::chrono::steady_clock::now();
-		chrono::milliseconds diff = chrono::duration_cast<chrono::milliseconds>(new_last_read_ts - last_read_ts);
-		int expected_jiffies = diff.count() * ((double)sysconf(_SC_CLK_TCK) / 1000.0);
-		last_read_ts = new_last_read_ts;
-
-		nvals = statlist.size();
-		int i = 0;
-		int smallest = 100, sidx;
-		int largest = 0, lidx;
-		for (auto& cpu : statlist)
-		{
-			for (auto& oldcpu : last)
-			{
-				if (cpu.label == oldcpu.label)
-				{
-					int v = cpu.get_total() - oldcpu.get_total();
-					if (v > largest && i > 0)
-					{
-						largest = v;
-						lidx = i;
-					}
-					if (v < smallest)
-					{
-						smallest = v;
-						sidx = i;
-					}
-					totals[i] += v;
-					vals[i++] = v;
-					break;
-				}
-			}
-		}
+		auto head = statlist.front();
 		
-		for (int j = 0; j < nvals; ++j)
-		{
-			cout << setw(2) << j << ": " << setw(3) << vals[j] << "  ";
-		}
-		cout << "Largest: cpu" << lidx << " = " << largest 
-			 << "  Smallest: cpu" << sidx << " = " << smallest 
-			 << "   Expected: " << expected_jiffies << std::endl;
+		cout << head.diff(last).print() << endl;
 
-		last = statlist;
-		
-		// Output averages
-		if (++samples % 10 == 0)
-		{
-			cout << "Averages: ";
-
-			for (int j = 0; j < nvals; ++j)
-			{
-				cout << setw(2) << j << ": " << setw(3) << (totals[j] / samples) << "  ";
-			}
-			cout << std::endl;
-		}
+		last = head;
+		this_thread::sleep_for(chrono::seconds(1));
 	}
 
 	return 0;
