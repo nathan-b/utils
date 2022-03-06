@@ -1,12 +1,42 @@
-#!/bin/sh
+#!/bin/bash
 
-if [[ $# -eq 0 ]]; then
-	variant=install
-else
-	variant="$@"
+variant=""
+jorbs=12
+while [[ $# -gt 0 ]]; do
+	opt="$1"
+	shift
+
+	case $opt in
+	-j|--jobs)
+		jorbs="$1"
+		shift
+		;;
+	*)
+		variant="$variant $opt" # concat
+		;;
+	esac
+done
+
+if [ -z "$variant" ]; then
+	variant="make install"
 fi
 
-cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=7 -v /draios:/draios:ro -v /opt/draios:/opt/draios -v /opt/draios/pkgs:/out -v /var/run/docker.sock:/var/run/docker.sock -v /draios/build/agent:/code/agent/build -v /draios/build/sysdig:/code/sysdig/build -v pipcache:/root/.cache quay.io/sysdig/agent-builder $variant"
+cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=$jorbs \
+	-v /draios/agent:/draios/agent:ro \
+	-v /draios/protorepo:/draios/protorepo:ro \
+	-v /draios/oss-falco:/draios/oss-falco:ro \
+	-v /draios/agent-libs:/draios/agent-libs:ro \
+	-v /draios/probe-builder:/draios/probe-builder:ro \
+	-v /opt/draios:/opt/draios \
+	-v /opt/draios/pkgs:/out \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-v /draios/build/agent:/code/agent/build \
+	-v pipcache:/root/.cache \
+	quay.io/sysdig/agent-builder:latest-centos $variant"
+#cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=7 -v /draios:/draios:ro -v /opt/draios:/opt/draios -v /opt/draios/pkgs:/out -v /var/run/docker.sock:/var/run/docker.sock -v /draios/build/agent:/code/agent/build -v /draios/build/sysdig:/code/sysdig/build -v pipcache:/root/.cache agent-builder $variant"
 echo $cmd
 $cmd
+
+echo Done!
+notify-send "Your build" "is done"
 
