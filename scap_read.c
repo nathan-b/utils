@@ -18,6 +18,8 @@
 #define EVF_BLOCK_TYPE_V2 0x217
 #define EVF_BLOCK_TYPE_V2_LARGE 0x222
 
+#define NS_PER_MS 1000000
+
 typedef struct
 {
 	uint32_t block_type;
@@ -67,6 +69,8 @@ int32_t scap_read(const char* filename, bool verbose)
 	section_header sh;
 	uint32_t bt;  // Block trailer
 	uint32_t num_events = 0;
+	uint64_t first_ns = 0;
+	uint64_t last_ns = 0;
 
 	// Open the file
 	f = fopen(filename, "rb");
@@ -173,9 +177,17 @@ int32_t scap_read(const char* filename, bool verbose)
 					printf("\tcpuid=%d flags=0x0", esh->cpuid);
 				pevent = &esh->header;
 			}
-			if (pevent && verbose)
+			if (pevent)
 			{
-				printf("\tEvent type=%u, tid=%llu, len=%u\n", pevent->type, pevent->tid, pevent->len);
+				if (first_ns == 0)
+				{
+					first_ns = pevent->ts_ns;
+				}
+				last_ns = pevent->ts_ns;
+				if (verbose)
+				{
+					printf("\tEvent type=%u, ts=%llu, tid=%llu, len=%u\n", pevent->type, pevent->ts_ns, pevent->tid, pevent->len);
+				}
 			}
 		}
 
@@ -201,7 +213,11 @@ int32_t scap_read(const char* filename, bool verbose)
 done:
 	if (ret == 0)
 	{
-		printf("File is correctly formed and contains %u events\n", num_events);
+		printf("File is correctly formed and contains %u events between %llu and %llu (%llu ms)\n", 
+				num_events, 
+				first_ns, 
+				last_ns, 
+				(last_ns - first_ns) / NS_PER_MS );
 	}
 	if (readbuf)
 	{
