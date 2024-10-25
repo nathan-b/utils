@@ -13,7 +13,7 @@ def load_values(path)
   return m
 end
 
-$msg_map = load_values("/home/nathan/src/draios/protorepo/agent-be/proto/draios.proto")
+$msg_map = load_values("/home/nathan/src/draios/agent/deps/protorepo/agent-be/proto/common.proto")
 while a = ARGV.shift
   puts $msg_map[a]
 end
