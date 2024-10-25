@@ -1,8 +1,8 @@
 #!/bin/bash
 
 variant=""
-jorbs=12
-image="quay.io/sysdig/agent-builder:latest-centos"
+jorbs=16
+image="us-docker.pkg.dev/sysdig-artifact-registry-dev/gar-docker/agent/agent-linux-builder:latest-x86_64"
 while [[ $# -gt 0 ]]; do
 	opt="$1"
 	shift
@@ -13,7 +13,11 @@ while [[ $# -gt 0 ]]; do
 		shift
 		;;
 	-l|--local)
-		image="agent-builder:latest-centos"
+		image="agent-linux-builder:latest-x86_64"
+		shift
+		;;
+	-b|--builder)
+		image="$1"
 		shift
 		;;
 	*)
@@ -27,18 +31,16 @@ if [ -z "$variant" ]; then
 fi
 
 cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=$jorbs \
+	-e CMAKE_C_COMPILER_LAUNCHER=sccache \
+	-e CMAKE_CXX_COMPILER_LAUNCHER=sccache \
+	-v /draios/build/sccache:/root/.cache/sccache
 	-v /draios/agent:/draios/agent:ro \
-	-v /draios/protorepo:/draios/protorepo:ro \
-	-v /draios/oss-falco:/draios/oss-falco:ro \
-	-v /draios/agent-libs:/draios/agent-libs:ro \
-	-v /draios/probe-builder:/draios/probe-builder:ro \
 	-v /opt/draios:/opt/draios \
 	-v /opt/draios/pkgs:/out \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-v /draios/build/agent:/code/agent/build \
 	-v pipcache:/root/.cache \
 	$image $variant"
-#cmd="docker run --rm -it --name agent-build -e MAKE_JOBS=7 -v /draios:/draios:ro -v /opt/draios:/opt/draios -v /opt/draios/pkgs:/out -v /var/run/docker.sock:/var/run/docker.sock -v /draios/build/agent:/code/agent/build -v /draios/build/sysdig:/code/sysdig/build -v pipcache:/root/.cache agent-builder $variant"
 echo $cmd
 $cmd
 
